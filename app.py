@@ -14,7 +14,7 @@ def obtener_token_fresco():
     # options.add_argument("--headless") 
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Remote(command_executor='http://localhost:4444/wd/hub', options=options)
     
     url_objetivo = "https://mitelefe.com/" 
     driver.get(url_objetivo)
