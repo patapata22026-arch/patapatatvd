@@ -1,3 +1,5 @@
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import json
 from flask import Flask, redirect
@@ -10,11 +12,17 @@ def obtener_token_fresco():
     print("[+] El reproductor local pidió señal. Abriendo navegador para espiar...")
     
     options = webdriver.ChromeOptions()
-    # MODIFICACIÓN 1: Comentamos el modo headless para ver qué pasa en la pantalla
-    # options.add_argument("--headless") 
+   options.add_argument("--headless=new") 
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    driver = webdriver.Remote(command_executor='http://localhost:4444/wd/hub', options=options)
+    # Esto descarga e instala el Chrome compatible con Linux en milisegundos
+driver = webdriver.Chrome(
+    service=ChromeService(ChromeDriverManager().install()),
+    options=options
+)
     
     url_objetivo = "https://mitelefe.com/" 
     driver.get(url_objetivo)
