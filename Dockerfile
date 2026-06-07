@@ -1,28 +1,50 @@
-# 1. Utilizar la imagen oficial completa de Python para garantizar compatibilidad de librerías
-FROM python:3.10
+# 1. Usar Ubuntu como base estable para asegurar las rutas de Chrome
+FROM ubuntu:22.04
 
-# 2. Instalar Chromium, su driver y las dependencias de fuentes/X11 necesarias para entornos virtuales
+# Evitar bloqueos interactivos en la terminal de Render
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 2. Instalar Python 3, pip y las dependencias del sistema gráfico elemental
 RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-driver \
+    python3 \
+    python3-pip \
+    curl \
+    wget \
+    unzip \
+    libglib2.0-0 \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    librandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libasound2 \
     fonts-liberation \
-    libfontconfig1 \
-    x11-common \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Configurar el directorio de trabajo
+# 3. Descargar e instalar de forma directa el paquete oficial de Google Chrome Estable
+RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get update \
+    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
+    && rm ./google-chrome-stable_current_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Configurar el directorio de la app
 WORKDIR /app
 
-# 4. Instalar las dependencias de Python
+# 5. Instalar librerías de Python (Flask y Selenium)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# 5. Copiar el código del proyecto
+# 6. Copiar el código del proyecto
 COPY . .
 
-# Definir variables de entorno estables para el sistema
-ENV CHROME_BIN=/usr/bin/chromium
-ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
-
-# 6. Comando de arranque
-CMD ["python", "app.py"]
+# Comando de arranque explícito para Python 3
+CMD ["python3", "app.py"]
