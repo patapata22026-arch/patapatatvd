@@ -7,7 +7,7 @@ from selenium import webdriver
 app = Flask(__name__)
 
 def obtener_token_fresco():
-    print("[+] Iniciando busqueda de token con Chrome nativo...")
+    print("[+] Iniciando busqueda de token con Chrome en contenedor...")
     
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
@@ -16,7 +16,7 @@ def obtener_token_fresco():
     options.add_argument("--disable-gpu")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    # Arranca el Chrome nativo del sistema
+    # Conecta directo con el Chrome preinstalado de la imagen
     driver = webdriver.Chrome(options=options)
     
     url_objetivo = "https://mitelefe.com/"
@@ -52,6 +52,5 @@ def telefe():
         return f"Error interno en el servidor: {str(e)}", 500
 
 if __name__ == "__main__":
-    # Render asigna el puerto automaticamente mediante la variable PORT
     puerto = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=puerto)
