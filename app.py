@@ -3,37 +3,41 @@ import time
 import json
 from flask import Flask, redirect
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 
 app = Flask(__name__)
 
 def obtener_token_fresco():
-    print("[+] Inicializando Google Chrome con argumentos forzados para Render Free...")
+    print("[+] Lanzando Chromium con bypass de memoria para Render...")
     
     options = webdriver.ChromeOptions()
+    options.binary_location = "/usr/bin/chromium"
     
-    # Extraer la ruta nativa de Apify
-    ruta_chrome = os.environ.get("APIFY_CHROME_EXECUTABLE_PATH", "/usr/bin/google-chrome")
-    options.binary_location = r"{}".format(ruta_chrome)
-    
-    # ARGUMENTOS DE INGENIERÍA CRÍTICOS PARA REDES AISLADAS (EVITA EL EXITED ABNORMALLY):
-    options.add_argument("--headless=old")  # Fuerza el headless clásico que no pide permisos de sandbox
+    # ARGUMENTOS MATEMÁTICOS DE FUERZA MAYOR PARA EVITAR EL "DEVSHMPERMISSION":
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-setuid-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-dev-shm-usage") # Desactiva el uso de /dev/shm por completo
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-software-rasterizer")
-    options.add_argument("--user-data-dir=/tmp/chrome-user-data") # Fuerza a escribir en la carpeta temporal de Render
-    options.add_argument("--remote-debugging-port=9222")
+    options.add_argument("--disable-extensions")
+    
+    # Forzar a Chrome a usar carpetas temporales de disco en lugar de memoria RAM compartida
+    options.add_argument("--user-data-dir=/tmp/chrome-user-data")
+    options.add_argument("--data-path=/tmp/chrome-data")
+    options.add_argument("--disk-cache-dir=/tmp/chrome-cache")
+    
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    # Inicialización directa con las opciones inyectadas
-    driver = webdriver.Chrome(options=options)
+    # Inicializar apuntando al driver del sistema operativo
+    servicio = Service(executable_path="/usr/bin/chromedriver")
+    driver = webdriver.Chrome(service=servicio, options=options)
     
     try:
         url_objetivo = "https://mitelefe.com/"
         driver.get(url_objetivo)
         
-        print("[+] Pagina cargada. Esperando 20 segundos de trafico de red...")
+        print("[+] Pagina cargada exitosamente en aislamiento total. Extrayendo red...")
         time.sleep(20)
         
         logs = driver.get_log("performance")
