@@ -7,13 +7,13 @@ from selenium import webdriver
 app = Flask(__name__)
 
 def obtener_token_fresco():
-    print("[+] Inicializando Google Chrome Oficial en modo servidor...")
+    print("[+] Inicializando Google Chrome en contenedor aislado...")
     
     options = webdriver.ChromeOptions()
-    # Ruta exacta del binario de Google Chrome en Ubuntu
+    # Ruta estricta de Chrome en imágenes standalone
     options.binary_location = "/usr/bin/google-chrome"
     
-    # Parámetros obligatorios para el aislamiento en la nube
+    # Argumentos obligatorios para evitar consumo de memoria RAM
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-setuid-sandbox")
@@ -23,14 +23,14 @@ def obtener_token_fresco():
     options.add_argument("--disable-software-rasterizer")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    # Dejamos que Selenium detecte el driver nativo de la instalación
+    # Inicialización directa del navegador preinstalado
     driver = webdriver.Chrome(options=options)
     
     try:
         url_objetivo = "https://mitelefe.com/"
         driver.get(url_objetivo)
         
-        print("[+] Navegador abierto. Esperando 20 segundos para recolectar tráfico de red...")
+        print("[+] Navegador activo en la nube. Esperando 20 segundos de telemetría...")
         time.sleep(20)
         
         logs = driver.get_log("performance")
@@ -46,7 +46,7 @@ def obtener_token_fresco():
                     
         return enlace_m3u8
     except Exception as e:
-        print(f"[-] Error en el proceso de Selenium: {str(e)}")
+        print(f"[-] Error operativo en Selenium: {str(e)}")
         return None
     finally:
         driver.quit()
@@ -56,13 +56,14 @@ def telefe():
     try:
         url_final = obtener_token_fresco()
         if url_final:
-            print(f"[+] Token localizado con éxito: {url_final}")
+            print(f"[+] Enlace m3u8 localizado: {url_final}")
             return redirect(url_final)
         else:
-            return "Error: No se pudo interceptar el flujo de video dinámico.", 500
+            return "Error: No se pudo interceptar el flujo dinámico.", 500
     except Exception as e:
         return f"Error interno en la pasarela proxy: {str(e)}", 500
 
 if __name__ == "__main__":
+    # Render asigna el puerto mediante la variable PORT
     puerto = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=puerto)
