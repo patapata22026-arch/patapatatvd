@@ -7,34 +7,33 @@ from selenium import webdriver
 app = Flask(__name__)
 
 def obtener_token_fresco():
-    print("[+] Inicializando Google Chrome mediante detección nativa de Apify...")
+    print("[+] Inicializando Google Chrome con argumentos forzados para Render Free...")
     
     options = webdriver.ChromeOptions()
     
-    # TRUCO EXPERTO: Apify guarda la ruta exacta en la variable de entorno 'APIFY_CHROME_EXECUTABLE_PATH'
-    # Si no existe, recurre por defecto a las rutas estándar de Linux de forma segura.
+    # Extraer la ruta nativa de Apify
     ruta_chrome = os.environ.get("APIFY_CHROME_EXECUTABLE_PATH", "/usr/bin/google-chrome")
-    print(f"[+] Usando el binario de Chrome en la ruta: {ruta_chrome}")
-    options.binary_location = ruta_chrome
+    options.binary_location = r"{}".format(ruta_chrome)
     
-    # Parámetros mandatorios de aislamiento en la nube para evitar consumo excesivo de RAM
-    options.add_argument("--headless=new")
+    # ARGUMENTOS DE INGENIERÍA CRÍTICOS PARA REDES AISLADAS (EVITA EL EXITED ABNORMALLY):
+    options.add_argument("--headless=old")  # Fuerza el headless clásico que no pide permisos de sandbox
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-setuid-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--disable-extensions")
     options.add_argument("--disable-software-rasterizer")
+    options.add_argument("--user-data-dir=/tmp/chrome-user-data") # Fuerza a escribir en la carpeta temporal de Render
+    options.add_argument("--remote-debugging-port=9222")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    # Inicialización directa del navegador
+    # Inicialización directa con las opciones inyectadas
     driver = webdriver.Chrome(options=options)
     
     try:
         url_objetivo = "https://mitelefe.com/"
         driver.get(url_objetivo)
         
-        print("[+] Conexión establecida con MiTelefe. Extrayendo telemetría de red por 20 segundos...")
+        print("[+] Pagina cargada. Esperando 20 segundos de trafico de red...")
         time.sleep(20)
         
         logs = driver.get_log("performance")
@@ -53,7 +52,6 @@ def obtener_token_fresco():
         print(f"[-] Error operativo interno en la instancia de Selenium: {str(e)}")
         return None
     finally:
-        # Cierre absoluto del proceso del navegador para liberar memoria inmediatamente
         driver.quit()
 
 @app.route("/telefe")
@@ -61,14 +59,13 @@ def telefe():
     try:
         url_final = obtener_token_fresco()
         if url_final:
-            print(f"[+] Token m3u8 interceptado con éxito: {url_final}")
+            print(f"[+] Token m3u8 interceptado con exito: {url_final}")
             return redirect(url_final)
         else:
-            return "Error: No se pudo capturar el flujo dinámico de video.", 500
+            return "Error: No se pudo capturar el flujo dinamico de video.", 500
     except Exception as e:
         return f"Error interno en la pasarela proxy: {str(e)}", 500
 
 if __name__ == "__main__":
-    # Render asigna el puerto mediante la variable de entorno PORT
     puerto = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=puerto)
