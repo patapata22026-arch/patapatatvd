@@ -17,7 +17,7 @@ def obtener_token_fresco():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Remote(command_executor='http://localhost:4444/wd/hub', options=options)
     
     # Capturamos Telefe (puedes cambiarlo por el canal que estudies)
     url_objetivo = "https://mitelefe.com/" 
