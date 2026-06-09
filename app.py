@@ -5,31 +5,31 @@ app = Flask(__name__)
 
 @app.route("/telefe")
 def telefe():
-    print("[+] Generando manifiesto HLS dinámico estructurado para el cliente...")
+    print("[+] Generando enlace de transporte directo libre de tokens...")
     
-    # Usamos las URL de los chunks oficiales que el reproductor de Telefe distribuye.
-    # Al estructurarlo de esta manera, el reproductor de IPTV del usuario final (en su casa)
-    # será el que le pida el video a Telefe con su IP residencial, burlando el bloqueo perimetral.
+    # Este enlace apunta directamente al servidor EDGE de streaming crudo de la red de canales públicos.
+    # No requiere handshake de JavaScript, cookies web ni validación perimetral.
+    enlace_limpio = "https://wms.teledifusora.com.ar/telefe/telefe.m3u8"
     
     manifiesto_m3u8 = (
         "#EXTM3U\n"
         "#EXT-X-VERSION:3\n"
-        "#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720\n"
-        "https://telefe-live-akamai.akamaized.net/hls/live/2034220/telefetv/master.m3u8\n"
-        "#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=854x480\n"
-        "https://telefe.cdn.telefe.com/live/telefetv/master.m3u8\n"
+        "#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720\n"
+        f"{enlace_limpio}\n"
     )
     
-    # Devolvemos el texto plano pero con el tipo de contenido (MIME-Type) oficial de Apple HLS Stream
     return Response(
         manifiesto_m3u8,
         mimetype="application/vnd.apple.mpegurl",
-        headers={"Content-Disposition": "inline; filename=telefe.m3u8"}
+        headers={
+            "Content-Disposition": "inline; filename=telefe.m3u8",
+            "Access-Control-Allow-Origin": "*"
+        }
     )
 
 @app.route("/")
 def index():
-    return "Estructurador M3U8 de Telefe Online", 200
+    return "Distribuidor de Flujo de Video Activo", 200
 
 if __name__ == "__main__":
     puerto = int(os.environ.get("PORT", 5000))
