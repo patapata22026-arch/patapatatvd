@@ -1,69 +1,57 @@
 import os
 import time
 import json
-from flask import Flask, redirect
+from flask import Flask, Response, redirect
 from selenium import webdriver
-from urllib.parse import urlparse, parse_qs
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 
 app = Flask(__name__)
 
 def obtener_token_fresco():
-    print("[+] Servidor en la nube activado. Iniciando Chrome invisible...")
+    print("[+] Iniciando busqueda de token con Chrome nativo...")
     
     options = webdriver.ChromeOptions()
-    # AQUÍ ESTÁN LAS OPCIONES: Asegúrate de que estas 4 líneas existan
-    options.add_argument("--headless=new") 
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    # Aquí es donde conectamos el nuevo instalador automático que pusimos en el paso anterior:
-    driver = webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager().install()),
-        options=options
-    )
+    # Arranca el Chrome nativo del sistema
+    driver = webdriver.Chrome(options=options)
     
-    # ... (abajo de esto sigue tu código normal con el driver.get)
-    
-    # Capturamos Telefe (puedes cambiarlo por el canal que estudies)
-    url_objetivo = "https://mitelefe.com/" 
+    url_objetivo = "https://mitelefe.com/"
     driver.get(url_objetivo)
     
-    # En la nube le damos 20 segundos para asegurar que pesque el tráfico
+    print("[+] Esperando 20 segundos a que cargue el streaming...")
     time.sleep(20)
     
-    logs = driver.get_log('performance')
-    url_encontrada = None
+    logs = driver.get_log("performance")
+    enlace_m3u8 = None
     
-    for entry in logs:
-        log = json.loads(entry['message'])['message']
-        if log['method'] == 'Network.responseReceived':
-            url_peticion = log['params']['response']['url']
-            
-            if "jwpltx.com" in url_peticion and "mu=" in url_peticion:
-                url_parseada = urlparse(url_peticion)
-                parametros = parse_qs(url_parseada.query)
-                url_encontrada = parametros['mu'][0]
-                break
-            elif ".m3u8" in url_peticion and "jwpltx.com" not in url_peticion:
-                url_encontrada = url_peticion
+    for entrada in logs:
+        mensaje = json.loads(entrada["message"])["message"]
+        if "Network.requestWillBeSent" in mensaje["method"]:
+            url_solicitud = mensaje["params"]["request"]["url"]
+            if ".m3u8" in url_solicitud and "akamai" in url_solicitud:
+                enlace_m3u8 = url_solicitud
                 break
                 
     driver.quit()
-    return url_encontrada
+    return enlace_m3u8
 
-@app.route('/telefe')
+@app.route("/telefe")
 def telefe():
-    url_viva = obtener_token_fresco()
-    if url_viva:
-        print(f"[+] Redirección exitosa enviada al reproductor.")
-        return redirect(url_viva)
-    else:
-        return "Error: No se pudo capturar el token en la nube.", 404
+    try:
+        url_final = obtener_token_fresco()
+        if url_final:
+            print(f"[+] ¡Token capturado con exito!: {url_final}")
+            return redirect(url_final)
+        else:
+            return "Error: No se pudo capturar el token de Telefe.", 500
+    except Exception as e:
+        return f"Error interno en el servidor: {str(e)}", 500
 
-if __name__ == '__main__':
-    # Render nos asigna un puerto dinámico mediante una variable de entorno
+if __name__ == "__main__":
+    # Render asigna el puerto automaticamente mediante la variable PORT
     puerto = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=puerto)
+    app.run(host="0.0.0.0", port=puerto)
