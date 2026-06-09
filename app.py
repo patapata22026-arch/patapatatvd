@@ -4,6 +4,8 @@ import json
 from flask import Flask, redirect
 from selenium import webdriver
 from urllib.parse import urlparse, parse_qs
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 
 app = Flask(__name__)
 
