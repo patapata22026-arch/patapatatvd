@@ -19,7 +19,11 @@ def obtener_token_fresco():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
-    driver = webdriver.Remote(command_executor='http://localhost:4444/wd/hub', options=options)
+    # Esto descarga e instala el Chrome compatible con Linux en milisegundos
+driver = webdriver.Chrome(
+    service=ChromeService(ChromeDriverManager().install()),
+    options=options
+)
     
     # Capturamos Telefe (puedes cambiarlo por el canal que estudies)
     url_objetivo = "https://mitelefe.com/" 
