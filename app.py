@@ -13,17 +13,19 @@ def obtener_token_fresco():
     print("[+] Servidor en la nube activado. Iniciando Chrome invisible...")
     
     options = webdriver.ChromeOptions()
-    # Opciones críticas para que Chrome corra en un servidor en la nube sin errores:
+    # AQUÍ ESTÁN LAS OPCIONES: Asegúrate de que estas 4 líneas existan
     options.add_argument("--headless=new") 
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
-    # Esto descarga e instala el Chrome compatible con Linux en milisegundos
-driver = webdriver.Chrome(
-    service=ChromeService(ChromeDriverManager().install()),
-    options=options
-)
+    # Aquí es donde conectamos el nuevo instalador automático que pusimos en el paso anterior:
+    driver = webdriver.Chrome(
+        service=ChromeService(ChromeDriverManager().install()),
+        options=options
+    )
+    
+    # ... (abajo de esto sigue tu código normal con el driver.get)
     
     # Capturamos Telefe (puedes cambiarlo por el canal que estudies)
     url_objetivo = "https://mitelefe.com/" 
