@@ -1,19 +1,26 @@
-# 1. Usar la imagen OFICIAL de Selenium con Chrome e idioma Python integrado
-FROM selenium/standalone-chrome:latest
+# 1. Usar una imagen oficial de Python ligera basada en Debian
+FROM python:3.11-slim
 
-# Instalar Python pip dentro de la imagen de Selenium de forma segura
-USER root
-RUN apt-get update && apt-get install -y python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
-USER seluser
+# 2. Instalar dependencias esenciales de Linux para que corra Chrome
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    unzip \
+    curl \
+    libglib2.0-0 \
+    libnss3 \
+    libgconf-2-4 \
+    libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2. Crear la carpeta de trabajo
+# 3. Crear la carpeta de trabajo
 WORKDIR /app
 
-# 3. Copiar e instalar las librerías de Python
+# 4. Copiar e instalar librerías
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# 4. Comando para arrancar el servidor proxy
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app", "--timeout", "120"]
+# 5. Comando de arranque
+CMD ["python", "app.py"]
